@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}出库 - 客户管家{% endblock %}
+{% block menu_outbound %}active{% endblock %}
+{% block main_height %}calc(100vh - 140px){% endblock %}
+
+{% block extra_style %}
+.status-bar {
+    background: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e0e0e0;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+.status-info { display: flex; gap: 25px; flex: 1; }
+.status-item { font-size: 13px; color: #333; }
+.status-item strong { color: #2a5298; }
+.quick-search { position: relative; width: 250px; }
+.search-input { width: 100%; padding: 8px 35px 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
+.search-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #999; pointer-events: none; }
+
+.operation-area {
+    background: white;
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.btn-add {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.btn-add:hover { background-color: #218838; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.search-box { padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; width: 200px; }
+.filter-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.filter-select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; background: white; cursor: pointer; }
+.filter-select:focus { border-color: #2a5298; box-shadow: 0 0 0 2px rgba(42,82,152,0.1); outline: none; }
+
+.time-filter {
+    background: white;
+    padding: 12px 15px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.filter-time { padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; background: white; }
+.date-input { padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; }
+.quick-filters { display: flex; gap: 15px; margin-left: auto; align-items: center; }
+.quick-filters label { display: flex; align-items: center; gap: 5px; margin: 0; cursor: pointer; }
+.quick-filters input[type="number"] { width: 50px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 3px; font-size: 12px; }
+
+.data-table {
+    width: 100%;
+    background: white;
+    border-collapse: collapse;
+    font-size: 12px;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    margin-bottom: 15px;
+}
+.data-table thead { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-bottom: 2px solid #dee2e6; }
+.data-table th { padding: 12px 10px; font-weight: 600; color: #333; text-align: left; white-space: nowrap; }
+.data-table td { padding: 10px; border-bottom: 1px solid #e9ecef; color: #555; white-space: nowrap; }
+.data-table tbody tr:hover { background-color: #f8f9fa; }
+
+.status-green  { color: #28a745; font-weight: bold; }
+.status-red    { color: #dc3545; font-weight: bold; }
+.status-blue   { color: #007bff; font-weight: bold; }
+.status-purple { color: #6f42c1; font-weight: bold; }
+.status-orange { color: #fd7e14; font-weight: bold; }
+.status-yellow { color: #ffc107; font-weight: bold; }
+.text-red   { color: #dc3545; }
+.text-green { color: #28a745; }
+
+.pagination-bar {
+    background: white;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 4px;
+    font-size: 13px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.page-controls { display: flex; gap: 10px; align-items: center; }
+.page-btn { padding: 6px 12px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer; font-size: 12px; }
+.page-btn:hover { background-color: #f0f0f0; border-color: #999; }
+.page-num { font-weight: 600; color: #333; }
+
+.empty-hint { text-align: center; padding: 40px; color: #999; font-size: 14px; }
+{% endblock %}
+
+{% block status_bar %}
+<div class="status-bar">
+    <div class="status-info">
+        <span class="status-item"><strong>今日单数：</strong>{{ stats.today_count }}</span>
+        <span class="status-item"><strong>出库单总数：</strong>{{ stats.total_orders }}</span>
+        <span class="status-item"><strong>今日金额：</strong>¥{{ '%.2f' | format(stats.today_amount) }}</span>
+    </div>
+    <div class="quick-search">
+        <input type="text" placeholder="快速拨号搜索" class="search-input">
+        <span class="search-icon">☎</span>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <i class="bi bi-house"></i> 导航：<a href="#">桌面</a> >> <a href="{{ url_for('outbound_list') }}">出入库管理</a> >> 出库
+</div>
+
+<div class="operation-area">
+    <a href="{{ url_for('outbound_new') }}" class="btn-add"><i class="bi bi-plus-lg"></i> 添加</a>
+    <input type="text" placeholder="查询关键词" class="search-box" id="searchInput">
+    <div class="filter-group">
+        <select class="filter-select"><option>业务员</option></select>
+        <select class="filter-select"><option>仓库</option></select>
+        <select class="filter-select"><option>物流</option></select>
+        <select class="filter-select"><option>付款方式</option></select>
+        <select class="filter-select"><option>审批</option></select>
+        <select class="filter-select"><option>发货</option></select>
+        <select class="filter-select"><option>状态</option></select>
+    </div>
+</div>
+
+<div class="time-filter">
+    <label><strong>下单时间：</strong></label>
+    <select class="filter-time">
+        <option>今天</option><option>昨天</option><option>本周</option><option>本月</option>
+    </select>
+    <input type="date" class="date-input">
+    <span>至</span>
+    <input type="date" class="date-input">
+    <div class="quick-filters">
+        <label><input type="checkbox"> 显包裹数</label>
+        <label><input type="checkbox"> 显定金</label>
+        <label><input type="checkbox"> 显尾款</label>
+        <label>超过 <input type="number" value="3"> 天未订货</label>
+    </div>
+</div>
+
+<div style="overflow-x: auto;">
+    <table class="data-table" id="ordersTable">
+        <thead>
+            <tr>
+                <th><input type="checkbox" id="selectAll"></th>
+                <th>ID</th>
+                <th>下单时间</th>
+                <th>业务员</th>
+                <th>收货人</th>
+                <th>电话</th>
+                <th>地址</th>
+                <th>物流</th>
+                <th>物流单号</th>
+                <th>付款方式</th>
+                <th>物流费</th>
+                <th>代收款</th>
+                <th>总金额</th>
+                <th>收款</th>
+                <th>退款</th>
+                <th>审批</th>
+                <th>发货</th>
+                <th>状态</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td><input type="checkbox"></td>
+                <td>OUT{{ '%03d' % order.id }}</td>
+                <td>{{ (order.order_time or order.created_at)[:16] }}</td>
+                <td>{{ order.salesperson or '-' }}</td>
+                <td>{{ order.recipient_name }}</td>
+                <td>{{ order.phone }}</td>
+                <td>{{ order.address or '-' }}</td>
+                <td>{{ order.logistics or '-' }}</td>
+                <td>{{ order.tracking_number or '-' }}</td>
+                <td>{{ order.payment_method or '-' }}</td>
+                <td>¥{{ '%.2f' % (order.shipping_fee or 0) }}</td>
+                <td {% if order.cod_amount %}class="text-red"{% endif %}>
+                    ¥{{ '%.2f' % (order.cod_amount or 0) }}
+                </td>
+                <td>¥{{ '{:,.2f}'.format(order.total_amount or 0) }}</td>
+                <td class="status-red">未收</td>
+                <td class="status-red">未退</td>
+                <td class="status-red">待审</td>
+                <td class="status-purple">待发货</td>
+                <td class="{% if order.status == '已完成' %}status-green{% else %}status-orange{% endif %}">
+                    {{ order.status }}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="18" class="empty-hint">
+                    <i class="bi bi-inbox" style="font-size:24px; display:block; margin-bottom:8px;"></i>
+                    暂无出库单，<a href="{{ url_for('outbound_new') }}">点击添加</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="pagination-bar">
+    <span>共 {{ orders | length }} 条记录</span>
+    <div class="page-controls">
+        <button class="page-btn"><i class="bi bi-chevron-left"></i> 上一页</button>
+        <span class="page-num">第 1 页</span>
+        <button class="page-btn">下一页 <i class="bi bi-chevron-right"></i></button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('selectAll').addEventListener('change', function () {
+        document.querySelectorAll('tbody input[type="checkbox"]').forEach(cb => {
+            cb.checked = this.checked;
+        });
+    });
+
+    document.getElementById('searchInput').addEventListener('input', function () {
+        const q = this.value.toLowerCase();
+        document.querySelectorAll('#ordersTable tbody tr').forEach(row => {
+            row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}

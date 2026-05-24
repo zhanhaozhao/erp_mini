@@ -1,0 +1,581 @@
+{% extends "base.html" %}
+
+{% block title %}新增出库单 - 客户管家{% endblock %}
+{% block menu_outbound %}active{% endblock %}
+{% block main_height %}calc(100vh - 56px){% endblock %}
+
+{% block extra_style %}
+.form-container {
+    background: white;
+    padding: 25px;
+    border-radius: 4px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    max-width: 900px;
+    margin: 0 auto 20px;
+}
+.form-section-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    margin: 25px 0 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e0e0e0;
+}
+.form-section-title:first-child { margin-top: 0; }
+
+.form-row-wrapper { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px; }
+.form-row-wrapper.full { grid-template-columns: 1fr; }
+.form-group { margin-bottom: 0; }
+.form-label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; color: #333; }
+.form-label .required { color: #dc3545; margin-right: 4px; }
+.form-control, .form-select { font-size: 13px; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; transition: all 0.3s; }
+.form-control:focus, .form-select:focus { border-color: #2a5298; box-shadow: 0 0 0 3px rgba(42,82,152,0.1); outline: none; }
+
+.input-group-btn { display: flex; gap: 6px; }
+.input-group-btn .form-control { flex: 1; }
+.btn-secondary {
+    padding: 8px 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.3s;
+}
+.btn-secondary:hover { background-color: #0056b3; }
+
+.radio-group { display: flex; gap: 20px; align-items: center; }
+.radio-item { display: flex; align-items: center; gap: 6px; }
+.radio-item input[type="radio"] { cursor: pointer; }
+.radio-item label { margin: 0; font-size: 13px; cursor: pointer; }
+
+.goods-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }
+.goods-table thead { background: #f8f9fa; border: 1px solid #dee2e6; }
+.goods-table th { padding: 10px; font-weight: 600; color: #333; text-align: center; border: 1px solid #dee2e6; }
+.goods-table td { padding: 10px; border: 1px solid #dee2e6; }
+.goods-table input[type="text"], .goods-table input[type="number"], .goods-table select {
+    width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 3px; font-size: 12px; box-sizing: border-box;
+}
+.btn-add-goods {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px;
+    background-color: #28a745; color: white; border: none; border-radius: 4px;
+    font-size: 18px; cursor: pointer; transition: all 0.3s;
+}
+.btn-add-goods:hover { background-color: #218838; }
+.btn-del-goods {
+    background-color: #dc3545; color: white; border: none;
+    padding: 4px 8px; border-radius: 3px; font-size: 11px; cursor: pointer;
+}
+.btn-del-goods:hover { background-color: #c82333; }
+
+.button-group {
+    display: flex; gap: 10px; justify-content: center;
+    margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;
+}
+.btn-save {
+    padding: 10px 30px; background-color: #28a745; color: white;
+    border: none; border-radius: 4px; font-size: 14px; font-weight: bold; cursor: pointer;
+}
+.btn-save:hover { background-color: #218838; box-shadow: 0 2px 6px rgba(40,167,69,0.3); }
+.btn-back {
+    padding: 10px 30px; background-color: #6c757d; color: white;
+    border: none; border-radius: 4px; font-size: 14px; cursor: pointer;
+}
+.btn-back:hover { background-color: #5a6268; }
+
+@media (max-width: 1024px) { .form-row-wrapper { grid-template-columns: 1fr; } }
+{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <i class="bi bi-house"></i> 导航：<a href="#">桌面</a> >>
+    <a href="{{ url_for('outbound_list') }}">出入库管理</a> >>
+    <a href="{{ url_for('outbound_list') }}">出库</a> >> 新增
+</div>
+
+<form class="form-container" id="outboundForm"
+      action="{{ url_for('outbound_new') }}" method="post">
+
+    <h3 class="form-section-title"><i class="bi bi-person-check"></i> 客户与收货信息</h3>
+
+    <div class="form-row-wrapper">
+        <div class="form-group">
+            <label class="form-label"><span class="required">*</span>收货人</label>
+            <div class="input-group-btn">
+                <input type="text" class="form-control" name="recipient_name"
+                       placeholder="输入收货人姓名" required>
+                <button type="button" class="btn-secondary">选择客户</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label"><span class="required">*</span>电话</label>
+            <div class="input-group-btn">
+                <input type="text" class="form-control" name="phone"
+                       placeholder="输入收货人电话" required>
+                <label style="display:flex;align-items:center;gap:5px;white-space:nowrap;margin:0;">
+                    <input type="checkbox" name="keep_customer_phone"> 留客户电话
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-row-wrapper">
+        <div class="form-group">
+            <label class="form-label"><span class="required">*</span>地区</label>
+            <select class="form-select" name="region" required>
+                <option value="">请选择…</option>
+                <option>北京市</option><option>上海市</option>
+                <option>广州市</option><option>深圳市</option><option>杭州市</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label"><span class="required">*</span>地址</label>
+            <div class="input-group-btn">
+                <input type="text" class="form-control" name="address"
+                       placeholder="输入收货地址" required>
+                <button type="button" class="btn-secondary"
+                        data-bs-toggle="modal" data-bs-target="#smartParseModal">
+                    <i class="bi bi-magic"></i> 智能解析
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <h3 class="form-section-title"><i class="bi bi-truck"></i> 物流信息</h3>
+
+    <div class="form-row-wrapper">
+        <div class="form-group">
+            <label class="form-label">物流</label>
+            <select class="form-select" name="logistics">
+                <option value="">请选择…</option>
+                <option>中通快递</option><option>德邦快递</option>
+                <option>圆通快递</option><option>顺丰快递</option><option>申通快递</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label">物流单号</label>
+            <input type="text" class="form-control" name="tracking_number" placeholder="输入物流单号">
+        </div>
+    </div>
+
+    <div class="form-row-wrapper">
+        <div class="form-group">
+            <label class="form-label">物流费</label>
+            <div class="input-group-btn">
+                <input type="number" class="form-control" name="shipping_fee" value="0" step="0.01">
+                <div class="radio-group" style="flex:1;">
+                    <label class="radio-item">
+                        <input type="radio" name="shipping_payment" value="prepaid" checked> 现付
+                    </label>
+                    <label class="radio-item">
+                        <input type="radio" name="shipping_payment" value="arrival"> 到付
+                    </label>
+                    <label class="radio-item">
+                        <input type="radio" name="shipping_payment" value="deduct"> 扣付
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">仓库</label>
+            <select class="form-select" name="warehouse">
+                <option>仓库1</option><option>仓库2</option>
+                <option selected>仓库3</option><option>仓库4</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form-row-wrapper">
+        <div class="form-group">
+            <label class="form-label">付款方式</label>
+            <select class="form-select" name="payment_method">
+                <option value="">请选择…</option>
+                <option>现金</option><option>微信</option>
+                <option selected>物流代收</option><option>不代收</option><option>银行转账</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label">付款说明</label>
+            <input type="text" class="form-control" name="payment_note" placeholder="输入付款说明">
+        </div>
+    </div>
+
+    <div class="form-row-wrapper">
+        <div class="form-group">
+            <label class="form-label">代收款</label>
+            <input type="number" class="form-control" name="cod_amount" value="0.00" step="0.01">
+        </div>
+    </div>
+
+    <h3 class="form-section-title"><i class="bi bi-bag-check"></i> 金额与商品信息</h3>
+
+    <div class="form-row-wrapper">
+        <div class="form-group">
+            <label class="form-label">总金额</label>
+            <input type="number" class="form-control" name="total_amount" id="totalAmount" value="0" step="0.01">
+        </div>
+        <div class="form-group">
+            <label class="form-label">抹零</label>
+            <input type="number" class="form-control" name="discount" value="0" step="0.01">
+        </div>
+    </div>
+
+    <div class="form-row-wrapper">
+        <div class="form-group">
+            <label class="form-label">订金</label>
+            <input type="number" class="form-control" name="deposit" value="0" step="0.01">
+        </div>
+        <div class="form-group">
+            <label class="form-label">预存款</label>
+            <input type="number" class="form-control" name="prepaid_deposit" value="0" step="0.01">
+        </div>
+    </div>
+
+    <div class="form-row-wrapper">
+        <div class="form-group">
+            <label class="form-label">预存商品</label>
+            <input type="number" class="form-control" name="prepaid_goods" value="0" step="0.01">
+        </div>
+        <div class="form-group">
+            <label class="form-label">手续费</label>
+            <input type="number" class="form-control" name="handling_fee" value="0" step="0.01">
+        </div>
+    </div>
+
+    <!-- 商品明细 -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;">
+        <h4 style="margin:0;font-size:14px;color:#333;">商品明细</h4>
+        <button type="button" class="btn-secondary">导入明细</button>
+    </div>
+
+    <table class="goods-table">
+        <thead>
+            <tr>
+                <th style="width:200px;">品名</th>
+                <th>规格</th>
+                <th style="width:60px;">单位</th>
+                <th style="width:60px;">数量</th>
+                <th style="width:70px;">单价</th>
+                <th style="width:70px;">金额</th>
+                <th>备注</th>
+                <th style="width:50px;">赠品</th>
+                <th style="width:60px;">操作</th>
+            </tr>
+        </thead>
+        <tbody id="goodsTable">
+            <tr>
+                <td>
+                    <div style="display:flex;gap:5px;">
+                        <input type="text" placeholder="选择商品" class="goods-name">
+                        <button type="button" class="btn-add-goods" title="添加商品">+</button>
+                    </div>
+                </td>
+                <td><input type="text" placeholder="规格" class="goods-spec"></td>
+                <td>
+                    <select class="goods-unit">
+                        <option>袋</option><option>件</option><option>箱</option>
+                    </select>
+                </td>
+                <td><input type="number" value="0" min="0" class="goods-qty"></td>
+                <td><input type="number" value="0" min="0" step="0.01" class="goods-price"></td>
+                <td><input type="number" value="0" min="0" step="0.01" class="goods-amount" readonly></td>
+                <td><input type="text" placeholder="备注" class="goods-note"></td>
+                <td style="text-align:center;"><input type="checkbox" class="goods-gift"></td>
+                <td><button type="button" class="btn-del-goods">删除</button></td>
+            </tr>
+        </tbody>
+    </table>
+    <div style="margin-top:10px;">
+        <button type="button" class="btn-secondary" id="addGoodsRow">+ 添加商品</button>
+    </div>
+
+    <h3 class="form-section-title"><i class="bi bi-file-text"></i> 其他信息</h3>
+
+    <div class="form-row-wrapper full">
+        <div class="form-group">
+            <label class="form-label">备注</label>
+            <textarea class="form-control" name="remark"
+                      style="resize:vertical;min-height:80px;" placeholder="输入备注信息"></textarea>
+        </div>
+    </div>
+
+    <div class="form-row-wrapper">
+        <div class="form-group">
+            <label class="form-label">业务员</label>
+            <select class="form-select" name="salesperson">
+                <option value="">请选择…</option>
+                <option>司孟原</option><option>张三</option><option>王五</option><option>刘七</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label">下单时间</label>
+            <input type="datetime-local" class="form-control" name="order_time" value="{{ now }}">
+        </div>
+    </div>
+
+    <div class="form-row-wrapper">
+        <div class="form-group">
+            <label class="form-label">付款凭证</label>
+            <div style="display:flex;gap:10px;align-items:center;">
+                <button type="button" class="btn-secondary"><i class="bi bi-plus-lg"></i> 添加凭证</button>
+                <span style="font-size:12px;color:#999;">支持jpg、png等图片格式</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 商品数据 JSON 隐藏字段 -->
+    <input type="hidden" name="goods_data" id="goodsData">
+
+    <div class="button-group">
+        <button type="submit" class="btn-save"><i class="bi bi-save"></i> 保存</button>
+        <a href="{{ url_for('outbound_list') }}" class="btn-back"><i class="bi bi-arrow-left"></i> 返回</a>
+    </div>
+</form>
+
+<!-- 智能解析 Modal -->
+<div class="modal fade" id="smartParseModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:500px;">
+        <div class="modal-content">
+            <div class="modal-header" style="background:linear-gradient(135deg,#1e3c72,#2a5298);color:white;padding:14px 20px;">
+                <h5 class="modal-title" style="font-size:15px;margin:0;">
+                    <i class="bi bi-magic"></i> 智能解析收货信息
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="padding:20px;">
+                <p style="font-size:12px;color:#888;margin-bottom:10px;">
+                    粘贴任意格式的收货信息，自动识别姓名、电话、地区和地址。
+                </p>
+                <textarea id="parseInput" style="width:100%;height:110px;padding:10px;
+                    border:1px solid #ddd;border-radius:6px;font-size:13px;resize:vertical;
+                    line-height:1.6;" placeholder="例如：
+张三 13812345678 北京市朝阳区某路123号
+或：
+收货人：李四  手机：13900001234  地址：上海市浦东新区陆家嘴1号"></textarea>
+
+                <div id="parsePreview" style="display:none;margin-top:14px;
+                    background:#f8f9fa;border-radius:6px;padding:14px;font-size:13px;">
+                </div>
+            </div>
+            <div class="modal-footer" style="padding:12px 20px;gap:8px;">
+                <button type="button" id="parseBtn"
+                        style="padding:8px 20px;background:#2a5298;color:white;border:none;
+                               border-radius:4px;font-size:13px;cursor:pointer;">
+                    <i class="bi bi-search"></i> 解析
+                </button>
+                <button type="button" id="parseFillBtn"
+                        style="display:none;padding:8px 20px;background:#28a745;color:white;
+                               border:none;border-radius:4px;font-size:13px;cursor:pointer;">
+                    <i class="bi bi-check-lg"></i> 填入表单
+                </button>
+                <button type="button" class="btn" data-bs-dismiss="modal"
+                        style="padding:8px 16px;font-size:13px;">取消</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function newGoodsRow() {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><div style="display:flex;gap:5px;">
+                <input type="text" placeholder="选择商品" class="goods-name">
+                <button type="button" class="btn-add-goods" title="添加商品">+</button>
+            </div></td>
+            <td><input type="text" placeholder="规格" class="goods-spec"></td>
+            <td><select class="goods-unit"><option>袋</option><option>件</option><option>箱</option></select></td>
+            <td><input type="number" value="0" min="0" class="goods-qty"></td>
+            <td><input type="number" value="0" min="0" step="0.01" class="goods-price"></td>
+            <td><input type="number" value="0" min="0" step="0.01" class="goods-amount" readonly></td>
+            <td><input type="text" placeholder="备注" class="goods-note"></td>
+            <td style="text-align:center;"><input type="checkbox" class="goods-gift"></td>
+            <td><button type="button" class="btn-del-goods">删除</button></td>
+        `;
+        attachRowEvents(tr);
+        document.getElementById('goodsTable').appendChild(tr);
+    }
+
+    function attachRowEvents(tr) {
+        tr.querySelector('.btn-del-goods').addEventListener('click', () => {
+            if (document.querySelectorAll('#goodsTable tr').length > 1) {
+                tr.remove();
+            } else {
+                alert('至少保留一行');
+            }
+            recalcTotal();
+        });
+        const qty   = tr.querySelector('.goods-qty');
+        const price = tr.querySelector('.goods-price');
+        const amt   = tr.querySelector('.goods-amount');
+        [qty, price].forEach(el => el.addEventListener('input', () => {
+            amt.value = (parseFloat(qty.value) * parseFloat(price.value)).toFixed(2);
+            recalcTotal();
+        }));
+    }
+
+    function recalcTotal() {
+        let sum = 0;
+        document.querySelectorAll('.goods-amount').forEach(el => {
+            sum += parseFloat(el.value) || 0;
+        });
+        document.getElementById('totalAmount').value = sum.toFixed(2);
+    }
+
+    // 初始化第一行事件
+    attachRowEvents(document.querySelector('#goodsTable tr'));
+
+    document.getElementById('addGoodsRow').addEventListener('click', newGoodsRow);
+
+    // ── 智能解析 ──────────────────────────────────────────
+    const PROVINCES = [
+        '北京市','天津市','上海市','重庆市',
+        '河北省','山西省','辽宁省','吉林省','黑龙江省',
+        '江苏省','浙江省','安徽省','福建省','江西省','山东省',
+        '河南省','湖北省','湖南省','广东省','海南省','四川省',
+        '贵州省','云南省','陕西省','甘肃省','青海省',
+        '内蒙古自治区','广西壮族自治区','西藏自治区',
+        '宁夏回族自治区','新疆维吾尔自治区',
+        '香港特别行政区','澳门特别行政区'
+    ];
+
+    function smartParse(raw) {
+        let text = raw.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+        const result = { name:'', phone:'', region:'', address:'' };
+
+        // 1. 提取手机号
+        const phoneM = text.match(/1[3-9]\d{9}/);
+        if (phoneM) {
+            result.phone = phoneM[0];
+            text = text.replace(phoneM[0], '\x00');
+        }
+
+        // 2. 去掉常见标签（收货人：/ 地址：/ 手机：等）
+        text = text.replace(/收货人[：:：]?\s*/g, '')
+                   .replace(/联系人[：:：]?\s*/g, '')
+                   .replace(/[手电]机[号码]*[：:：]?\s*/g, '')
+                   .replace(/电话[：:：]?\s*/g, '')
+                   .replace(/地址[：:：]?\s*/g, '')
+                   .replace(/详细地址[：:：]?\s*/g, '');
+
+        // 3. 找省/市级别起点，截取地址部分
+        //    先尝试已知省名，再尝试"XX市/XX省"通用匹配
+        let addrStart = -1;
+        for (const prov of PROVINCES) {
+            const idx = text.indexOf(prov);
+            if (idx !== -1) {
+                result.region = prov;
+                addrStart = idx;
+                break;
+            }
+        }
+        if (addrStart === -1) {
+            // 通用兜底：找第一个"XX市"
+            const m = text.match(/[一-龥]{1,6}(?:省|自治区)/);
+            if (m) {
+                addrStart = text.indexOf(m[0]);
+                result.region = m[0];
+            } else {
+                const m2 = text.match(/[一-龥]{1,4}市/);
+                if (m2) { addrStart = text.indexOf(m2[0]); result.region = m2[0]; }
+            }
+        }
+
+        if (addrStart !== -1) {
+            result.address = text.slice(addrStart).replace(/\x00/g, '').trim();
+            text = text.slice(0, addrStart);
+        }
+
+        // 4. 剩余文本中提取姓名（2-5个汉字，排除常见非名字词）
+        const skipWords = ['收货','发货','地址','快递','物流','付款','备注'];
+        const names = (text.replace(/\x00/g, '').match(/[一-龥]{2,5}/g) || [])
+            .filter(w => !skipWords.some(s => w.includes(s)));
+        if (names.length) result.name = names[0];
+
+        return result;
+    }
+
+    let parsedData = null;
+
+    document.getElementById('smartParseModal').addEventListener('shown.bs.modal', () => {
+        document.getElementById('parseInput').focus();
+        document.getElementById('parsePreview').style.display = 'none';
+        document.getElementById('parseFillBtn').style.display = 'none';
+        parsedData = null;
+    });
+
+    document.getElementById('parseBtn').addEventListener('click', () => {
+        const text = document.getElementById('parseInput').value.trim();
+        if (!text) return;
+        parsedData = smartParse(text);
+
+        const preview = document.getElementById('parsePreview');
+        const fmt = (label, val) => val
+            ? `<div style="margin-bottom:6px;"><span style="color:#888;width:60px;display:inline-block;">${label}</span>
+               <strong style="color:#1e3c72;">${val}</strong></div>`
+            : `<div style="margin-bottom:6px;"><span style="color:#888;width:60px;display:inline-block;">${label}</span>
+               <span style="color:#ccc;">未识别</span></div>`;
+
+        preview.innerHTML =
+            fmt('姓名', parsedData.name) +
+            fmt('电话', parsedData.phone) +
+            fmt('地区', parsedData.region) +
+            fmt('地址', parsedData.address);
+        preview.style.display = 'block';
+        document.getElementById('parseFillBtn').style.display = 'inline-block';
+    });
+
+    // 回车直接解析
+    document.getElementById('parseInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter' && e.ctrlKey) document.getElementById('parseBtn').click();
+    });
+
+    document.getElementById('parseFillBtn').addEventListener('click', () => {
+        if (!parsedData) return;
+        if (parsedData.name)    document.querySelector('[name="recipient_name"]').value = parsedData.name;
+        if (parsedData.phone)   document.querySelector('[name="phone"]').value = parsedData.phone;
+        if (parsedData.address) document.querySelector('[name="address"]').value = parsedData.address;
+
+        if (parsedData.region) {
+            const sel = document.querySelector('[name="region"]');
+            // 找匹配的 option，没有就新增
+            let found = false;
+            for (const opt of sel.options) {
+                if (opt.value === parsedData.region || opt.text === parsedData.region) {
+                    sel.value = opt.value;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                const opt = new Option(parsedData.region, parsedData.region);
+                sel.add(opt);
+                sel.value = parsedData.region;
+            }
+        }
+
+        bootstrap.Modal.getInstance(document.getElementById('smartParseModal')).hide();
+    });
+    // ── end 智能解析 ───────────────────────────────────────
+
+    document.getElementById('outboundForm').addEventListener('submit', function (e) {
+        const rows = document.querySelectorAll('#goodsTable tr');
+        const goods = Array.from(rows).map(tr => ({
+            name:       tr.querySelector('.goods-name').value,
+            spec:       tr.querySelector('.goods-spec').value,
+            unit:       tr.querySelector('.goods-unit').value,
+            quantity:   tr.querySelector('.goods-qty').value,
+            unit_price: tr.querySelector('.goods-price').value,
+            amount:     tr.querySelector('.goods-amount').value,
+            note:       tr.querySelector('.goods-note').value,
+            is_gift:    tr.querySelector('.goods-gift').checked,
+        }));
+        document.getElementById('goodsData').value = JSON.stringify(goods);
+    });
+</script>
+{% endblock %}

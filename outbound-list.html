@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>出库 - 非特客户管家</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+
+        /* 顶部导航栏 */
+        .top-nav {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            display: flex;
+            flex-direction: column;
+            font-weight: bold;
+        }
+
+        .logo-text {
+            font-size: 18px;
+        }
+
+        .logo-sub {
+            font-size: 10px;
+            opacity: 0.8;
+        }
+
+        .nav-center {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+        }
+
+        .nav-center a {
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            padding: 5px 15px;
+            border-radius: 3px;
+            transition: all 0.3s;
+        }
+
+        .nav-center a:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .nav-center a.active {
+            background-color: #28a745;
+            font-weight: bold;
+        }
+
+        .nav-right {
+            display: flex;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        /* 状态栏 */
+        .status-bar {
+            background: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e0e0e0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .status-info {
+            display: flex;
+            gap: 25px;
+            flex: 1;
+        }
+
+        .status-item {
+            font-size: 13px;
+            color: #333;
+        }
+
+        .status-item strong {
+            color: #2a5298;
+        }
+
+        .quick-search {
+            position: relative;
+            width: 250px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 8px 35px 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            pointer-events: none;
+        }
+
+        /* 主容器 */
+        .main-container {
+            display: flex;
+            height: calc(100vh - 140px);
+        }
+
+        /* 左侧菜单 */
+        .left-sidebar {
+            width: 200px;
+            background: white;
+            border-right: 1px solid #e0e0e0;
+            padding: 15px 0;
+            overflow-y: auto;
+        }
+
+        .menu-title {
+            padding: 10px 15px;
+            font-weight: bold;
+            color: #333;
+            font-size: 14px;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 10px;
+        }
+
+        .menu-list {
+            list-style: none;
+        }
+
+        .menu-item {
+            border-left: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .menu-item a {
+            display: block;
+            padding: 10px 15px;
+            color: #666;
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .menu-item:hover a {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .menu-item.active {
+            border-left-color: #28a745;
+            background-color: #f0f8f5;
+        }
+
+        .menu-item.active a {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            padding: 15px 20px;
+            overflow-y: auto;
+            background-color: #f5f5f5;
+        }
+
+        /* 面包屑 */
+        .breadcrumb {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            background: white;
+            border-radius: 4px;
+        }
+
+        .breadcrumb a {
+            color: #2a5298;
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        /* 操作区 */
+        .operation-area {
+            background: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .btn-add {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .btn-add:hover {
+            background-color: #218838;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .search-box {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+            width: 200px;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-select:hover, .filter-select:focus {
+            border-color: #2a5298;
+            box-shadow: 0 0 0 2px rgba(42, 82, 152, 0.1);
+        }
+
+        /* 时间筛选 */
+        .time-filter {
+            background: white;
+            padding: 12px 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            font-size: 13px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .filter-time {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+            background-color: white;
+        }
+
+        .date-input {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .quick-filters {
+            display: flex;
+            gap: 15px;
+            margin-left: auto;
+            align-items: center;
+        }
+
+        .quick-filters label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .quick-filters input[type="checkbox"] {
+            cursor: pointer;
+        }
+
+        .quick-filters input[type="number"] {
+            width: 50px;
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
+        /* 数据表格 */
+        .data-table {
+            width: 100%;
+            background: white;
+            border-collapse: collapse;
+            font-size: 12px;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            margin-bottom: 15px;
+        }
+
+        .data-table thead {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .data-table th {
+            padding: 12px 10px;
+            font-weight: 600;
+            color: #333;
+            text-align: left;
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        .data-table td {
+            padding: 10px;
+            border-bottom: 1px solid #e9ecef;
+            color: #555;
+            word-break: break-word;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: #f8f9fa;
+            transition: background-color 0.2s;
+        }
+
+        .data-table input[type="checkbox"] {
+            cursor: pointer;
+        }
+
+        /* 状态样式 */
+        .status-green {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .status-red {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .status-blue {
+            color: #007bff;
+            font-weight: bold;
+        }
+
+        .status-purple {
+            color: #6f42c1;
+            font-weight: bold;
+        }
+
+        .status-orange {
+            color: #fd7e14;
+            font-weight: bold;
+        }
+
+        .status-yellow {
+            color: #ffc107;
+            font-weight: bold;
+        }
+
+        .text-red {
+            color: #dc3545;
+        }
+
+        .text-green {
+            color: #28a745;
+        }
+
+        /* 分页 */
+        .pagination {
+            background: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 4px;
+            font-size: 13px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .page-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .page-btn {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .page-btn:hover {
+            background-color: #f0f0f0;
+            border-color: #999;
+        }
+
+        .page-num {
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* 响应式 */
+        @media (max-width: 1200px) {
+            .filter-group {
+                gap: 5px;
+            }
+
+            .filter-select {
+                padding: 6px 8px;
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .left-sidebar {
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid #e0e0e0;
+            }
+
+            .nav-center {
+                gap: 15px;
+            }
+
+            .status-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .quick-search {
+                width: 100%;
+            }
+
+            .data-table {
+                font-size: 11px;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 8px 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <div class="top-nav">
+        <div class="logo">
+            <span class="logo-text">非特客户管家</span>
+            <span class="logo-sub">FEITE INFORMATION SYSTEM</span>
+        </div>
+        <div class="nav-center">
+            <a href="#">客户管理</a>
+            <a href="#" class="active">出入库管理</a>
+            <a href="#">财务</a>
+            <a href="#">日常管理</a>
+            <a href="#">个人资料</a>
+        </div>
+        <div class="nav-right">
+            <span>欢迎用户（管理员）</span>
+        </div>
+    </div>
+
+    <!-- 状态栏 -->
+    <div class="status-bar">
+        <div class="status-info">
+            <span class="status-item"><strong>今日人数：</strong>12</span>
+            <span class="status-item"><strong>订单数：</strong>28</span>
+            <span class="status-item"><strong>出库单数：</strong>15</span>
+            <span class="status-item"><strong>金额：</strong>¥125,680.00</span>
+            <span class="status-item"><strong>在线人数：</strong>8</span>
+        </div>
+        <div class="quick-search">
+            <input type="text" placeholder="快速拨号搜索" class="search-input">
+            <span class="search-icon">☎</span>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <!-- 左侧菜单 -->
+        <div class="left-sidebar">
+            <div class="menu-title">功能导航</div>
+            <ul class="menu-list">
+                <li class="menu-item active"><a href="#"><i class="bi bi-box-seam"></i> 出库</a></li>
+                <li class="menu-item"><a href="#"><i class="bi bi-archive"></i> 库存</a></li>
+                <li class="menu-item"><a href="#"><i class="bi bi-graph-up"></i> 出库统计</a></li>
+                <li class="menu-item"><a href="#"><i class="bi bi-list"></i> 出库明细</a></li>
+                <li class="menu-item"><a href="#"><i class="bi bi-bar-chart"></i> 产品销量统计</a></li>
+                <li class="menu-item"><a href="#"><i class="bi bi-people"></i> 客户购买统计</a></li>
+            </ul>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 面包屑导航 -->
+            <div class="breadcrumb">
+                <i class="bi bi-house"></i> 导航：<a href="#">桌面</a> >> <a href="#">出入库管理</a> >> 出库
+            </div>
+
+            <!-- 操作区 -->
+            <div class="operation-area">
+                <button class="btn-add"><i class="bi bi-plus-lg"></i> 添加</button>
+                <input type="text" placeholder="查询关键词" class="search-box">
+
+                <!-- 筛选下拉框 -->
+                <div class="filter-group">
+                    <select class="filter-select"><option>业务员</option></select>
+                    <select class="filter-select"><option>项目</option></select>
+                    <select class="filter-select"><option>仓库</option></select>
+                    <select class="filter-select"><option>物流</option></select>
+                    <select class="filter-select"><option>付款方</option></select>
+                    <select class="filter-select"><option>收款</option></select>
+                    <select class="filter-select"><option>退款</option></select>
+                    <select class="filter-select"><option>审批</option></select>
+                    <select class="filter-select"><option>发货</option></select>
+                    <select class="filter-select"><option>物流费</option></select>
+                    <select class="filter-select"><option>状态</option></select>
+                    <select class="filter-select"><option>库存</option></select>
+                    <select class="filter-select"><option>地区</option></select>
+                    <select class="filter-select"><option>客户</option></select>
+                </div>
+            </div>
+
+            <!-- 时间和快捷筛选 -->
+            <div class="time-filter">
+                <label><strong>下单时间：</strong></label>
+                <select class="filter-time">
+                    <option>今天</option>
+                    <option>昨天</option>
+                    <option>本周</option>
+                    <option>本月</option>
+                </select>
+                <input type="date" class="date-input" value="2026-05-17">
+                <span>至</span>
+                <input type="date" class="date-input" value="2026-05-17">
+
+                <div class="quick-filters">
+                    <label><input type="checkbox"> 显包裹数</label>
+                    <label><input type="checkbox"> 显定金</label>
+                    <label><input type="checkbox"> 显尾款</label>
+                    <label>超过 <input type="number" value="3"> 天未订货</label>
+                </div>
+            </div>
+
+            <!-- 出库单列表表格 -->
+            <div style="overflow-x: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" class="select-all"></th>
+                            <th>ID</th>
+                            <th>下单时间</th>
+                            <th>业务员</th>
+                            <th>收货人</th>
+                            <th>电话</th>
+                            <th>地址</th>
+                            <th>物流</th>
+                            <th>物流单号</th>
+                            <th>付款方式</th>
+                            <th>物流费</th>
+                            <th>代收款</th>
+                            <th>总金额</th>
+                            <th>已收金额</th>
+                            <th>收款</th>
+                            <th>退款</th>
+                            <th>审批</th>
+                            <th>发货</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="checkbox"></td>
+                            <td>OUT001</td>
+                            <td>2026-05-17 10:30</td>
+                            <td>张三</td>
+                            <td>李四</td>
+                            <td>13800000001</td>
+                            <td>北京市朝阳区某街道</td>
+                            <td>中通快递</td>
+                            <td>ZTO123456789</td>
+                            <td>微信</td>
+                            <td>¥8.00</td>
+                            <td>¥0.00</td>
+                            <td>¥1,250.00</td>
+                            <td class="text-green">¥1,250.00</td>
+                            <td class="status-green">已收</td>
+                            <td class="status-red">未退</td>
+                            <td class="status-blue">已审</td>
+                            <td class="status-blue">已发货</td>
+                            <td class="status-green">已完成</td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox"></td>
+                            <td>OUT002</td>
+                            <td>2026-05-17 11:15</td>
+                            <td>王五</td>
+                            <td>赵六</td>
+                            <td>13800000002</td>
+                            <td>上海市浦东新区某街道</td>
+                            <td>德邦快递</td>
+                            <td>DB987654321</td>
+                            <td>物流代收</td>
+                            <td>¥10.00</td>
+                            <td class="text-red">¥650.00</td>
+                            <td>¥2,580.00</td>
+                            <td class="text-red">¥1,930.00</td>
+                            <td class="status-red">未收</td>
+                            <td class="status-red">未退</td>
+                            <td class="status-blue">已审</td>
+                            <td class="status-purple">待发货</td>
+                            <td class="status-orange">处理中</td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox"></td>
+                            <td>OUT003</td>
+                            <td>2026-05-16 14:45</td>
+                            <td>刘七</td>
+                            <td>孙八</td>
+                            <td>13800000003</td>
+                            <td>广州市天河区某街道</td>
+                            <td>圆通快递</td>
+                            <td>YT456123789</td>
+                            <td>不代收</td>
+                            <td>¥6.50</td>
+                            <td>¥0.00</td>
+                            <td>¥3,200.00</td>
+                            <td class="text-green">¥3,200.00</td>
+                            <td class="status-green">已收</td>
+                            <td class="status-red">未退</td>
+                            <td class="status-blue">已审</td>
+                            <td class="status-blue">已发货</td>
+                            <td class="status-green">已完成</td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox"></td>
+                            <td>OUT004</td>
+                            <td>2026-05-16 09:20</td>
+                            <td>周九</td>
+                            <td>吴十</td>
+                            <td>13800000004</td>
+                            <td>深圳市南山区某街道</td>
+                            <td>顺丰快递</td>
+                            <td>SF789456123</td>
+                            <td>微信</td>
+                            <td>¥12.00</td>
+                            <td>¥0.00</td>
+                            <td>¥5,680.00</td>
+                            <td class="text-green">¥5,680.00</td>
+                            <td class="status-green">已收</td>
+                            <td class="status-red">未退</td>
+                            <td class="status-red">待审</td>
+                            <td class="status-purple">待发货</td>
+                            <td class="status-yellow">待审批</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 分页 -->
+            <div class="pagination">
+                <span>共4条记录</span>
+                <div class="page-controls">
+                    <button class="page-btn"><i class="bi bi-chevron-left"></i> 上一页</button>
+                    <span class="page-num">第 1 页</span>
+                    <button class="page-btn">下一页 <i class="bi bi-chevron-right"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 全选功能
+        document.querySelector('.select-all').addEventListener('change', function(e) {
+            document.querySelectorAll('tbody input[type="checkbox"]').forEach(cb => {
+                cb.checked = e.target.checked;
+            });
+        });
+
+        // 添加按钮事件
+        document.querySelector('.btn-add').addEventListener('click', function() {
+            alert('跳转到新增出库单页面');
+            // window.location.href = 'outbound-form.html';
+        });
+    </script>
+</body>
+</html>
