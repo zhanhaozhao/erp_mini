@@ -43,7 +43,28 @@
         }
         .nav-center a:hover { background-color: rgba(255,255,255,0.1); }
         .nav-center a.active { background-color: #28a745; font-weight: bold; }
-        .nav-right { display: flex; gap: 10px; font-size: 13px; }
+        .nav-right { display: flex; gap: 10px; font-size: 13px; align-items: center; }
+
+        .hamburger-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 26px;
+            cursor: pointer;
+            padding: 2px 8px;
+            line-height: 1;
+            margin-right: 4px;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 999;
+        }
+        .sidebar-overlay.show { display: block; }
 
         .main-container {
             display: flex;
@@ -57,6 +78,7 @@
             padding: 15px 0;
             overflow-y: auto;
             flex-shrink: 0;
+            transition: left 0.3s ease;
         }
         .menu-title {
             padding: 10px 15px;
@@ -98,11 +120,41 @@
         .breadcrumb a { color: #2a5298; text-decoration: none; }
         .breadcrumb a:hover { text-decoration: underline; }
 
+        /* ── 移动端适配 ── */
+        @media (max-width: 768px) {
+            .hamburger-btn { display: block; }
+            .nav-center { display: none; }
+            .nav-right .welcome-text { display: none; }
+
+            .main-container {
+                height: auto;
+                min-height: {% block main_height_mobile %}calc(100vh - 56px){% endblock %};
+            }
+
+            .left-sidebar {
+                position: fixed;
+                top: 0;
+                left: -220px;
+                width: 220px;
+                height: 100vh;
+                z-index: 1000;
+                box-shadow: 3px 0 12px rgba(0,0,0,0.15);
+                padding-top: 20px;
+            }
+            .left-sidebar.show { left: 0; }
+
+            .main-content { padding: 10px 12px; }
+            .breadcrumb { padding: 8px 12px; font-size: 11px; margin-bottom: 10px; }
+        }
+
         {% block extra_style %}{% endblock %}
     </style>
 </head>
 <body>
     <div class="top-nav">
+        <button class="hamburger-btn" id="sidebarToggle">
+            <i class="bi bi-list"></i>
+        </button>
         <div class="logo">
             <span class="logo-text">客户管家</span>
             <span class="logo-sub">CUSTOMER MANAGEMENT SYSTEM</span>
@@ -116,7 +168,7 @@
         </div>
         <div class="nav-right">
             {% if session.username %}
-            <span>欢迎，{{ session.username }}</span>
+            <span class="welcome-text">欢迎，{{ session.username }}</span>
             <a href="{{ url_for('logout') }}"
                style="color:rgba(255,255,255,0.8);text-decoration:none;padding:4px 10px;
                       border:1px solid rgba(255,255,255,0.4);border-radius:3px;font-size:13px;
@@ -131,6 +183,7 @@
 
     {% block status_bar %}{% endblock %}
 
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
     <div class="main-container">
         <div class="left-sidebar">
             <div class="menu-title">功能导航</div>
@@ -162,6 +215,21 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const sidebar  = document.querySelector('.left-sidebar');
+        const overlay  = document.getElementById('sidebarOverlay');
+        const toggle   = document.getElementById('sidebarToggle');
+        function closeSidebar() {
+            sidebar.classList.remove('show');
+            overlay.classList.remove('show');
+        }
+        toggle.addEventListener('click', () => {
+            const isOpen = sidebar.classList.toggle('show');
+            overlay.classList.toggle('show', isOpen);
+        });
+        overlay.addEventListener('click', closeSidebar);
+        sidebar.querySelectorAll('a').forEach(a => a.addEventListener('click', closeSidebar));
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

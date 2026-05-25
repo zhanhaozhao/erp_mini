@@ -87,6 +87,25 @@
 .btn-back:hover { background-color: #5a6268; }
 
 @media (max-width: 1024px) { .form-row-wrapper { grid-template-columns: 1fr; } }
+
+@media (max-width: 768px) {
+    .form-container { padding: 14px 12px; margin: 0 0 12px 0; max-width: 100%; }
+    .form-section-title { font-size: 14px; margin: 18px 0 10px; }
+
+    .input-group-btn { flex-wrap: wrap; gap: 6px; }
+    .input-group-btn .form-control { min-width: 0; }
+    .btn-secondary { width: 100%; justify-content: center; }
+
+    .radio-group { flex-wrap: wrap; gap: 12px; }
+
+    /* 商品明细表横向滚动 */
+    .goods-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .goods-table { min-width: 600px; font-size: 11px; }
+    .goods-table th, .goods-table td { padding: 6px 4px; }
+
+    .button-group { flex-direction: column; gap: 8px; }
+    .btn-save, .btn-back { width: 100%; padding: 12px; font-size: 15px; text-align: center; }
+}
 {% endblock %}
 
 {% block content %}
@@ -251,6 +270,7 @@
         <button type="button" class="btn-secondary">导入明细</button>
     </div>
 
+    <div class="goods-table-wrap">
     <table class="goods-table">
         <thead>
             <tr>
@@ -288,6 +308,7 @@
             </tr>
         </tbody>
     </table>
+    </div><!-- goods-table-wrap -->
     <div style="margin-top:10px;">
         <button type="button" class="btn-secondary" id="addGoodsRow">+ 添加商品</button>
     </div>
